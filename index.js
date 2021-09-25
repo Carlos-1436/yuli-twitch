@@ -1,27 +1,19 @@
 const botCore = require("./utils/core/bot.js");
 const bot = new botCore.bot();
-const fs = require("fs");
-
 var client = bot.client;
+const oauth = require("./oauth.js").events(client, bot);
+
+const fs = require("fs");
 var anti_spam = fs.readFileSync("./utils/others/anti-spam.txt")
     .toString().replace(/\r\n/g, " ").trim().split(" ");
 
+// Cache e reset do cache a cada 10 minutos
 var notBotCache = [];
-
 setInterval(async() => {
     botCache = [];
-}, 1000 * 60 * 5);
+}, (1000 * 60) * 10);
 
 // Events
-client.on("connected", (addr, port) => {
-    bot.logger.info(`<CONECTADO> - Bot conectado com sucesso no seguinte endereço: ${addr}:${port}`);
-});
-
-client.on("join", (channel, username, self) => {
-    if (self)
-        return bot.logger.info(`<CANAL> - Conectado ao canal ` + channel);
-});
-
 client.on("chat", async (channel, user, msg, self) => {
     var badges = {
         broadcaster: (user.badges !== null) ? user.badges.hasOwnProperty("broadcaster") : 0,
