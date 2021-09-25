@@ -1,0 +1,20 @@
+{
+  "name": "yuli-twitch",
+  "version": "1.0.0",
+  "description": "Um bot twitch feito para cuidar de seu chat e banir bots que forem registrados nele",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Galaxy",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^4.1.2",
+    "dotenv": "^10.0.0",
+    "enmap": "^5.8.7",
+    "fs": "0.0.1-security",
+    "sqlite3": "^5.0.2",
+    "tmi.js": "^1.8.5",
+    "winston": "^3.3.3"
+  }
+}
