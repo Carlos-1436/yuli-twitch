@@ -1,36 +1,28 @@
-const botCore = require("./utils/core/bot.js");
-const bot = new botCore.bot();
-var client = bot.client;
-const oauth = require("./oauth.js").events(client, bot);
-
 const fs = require("fs");
 var anti_spam = fs.readFileSync("./utils/others/anti-spam.txt")
     .toString().replace(/\r\n/g, " ").trim().split(" ");
 
-// Cache e reset do cache a cada 10 minutos
-var notBotCache = [];
-setInterval(async() => {
-    botCache = [];
-}, (1000 * 60) * 10);
+const botCore = require("./utils/core/bot.js");
+const bot = new botCore.bot();
+var client = bot.client;
+var db = bot.database;
 
 // Events
+client.on("connected", (addr, port) => {
+    bot.logger.info(`<CONECTADO> - Bot conectado com sucesso no seguinte endereço: ${addr}:${port}`);
+});
+
+client.on("join", (channel, username, self) => {
+    if (self)
+        return bot.logger.info(`<CANAL> - Conectado ao canal ` + channel);
+});
+
 client.on("chat", async (channel, user, msg, self) => {
     var badges = {
         broadcaster: (user.badges !== null) ? user.badges.hasOwnProperty("broadcaster") : 0,
         moderator: (user.badges !== null) ? user.badges.hasOwnProperty("moderator") : 0,
         vip: (user.badges !== null) ? user.badges.hasOwnProperty("vip") : 0,
         subscriber: (user.badges !== null) ? user.badges.hasOwnProperty("subscriber") : 0
-    }
-
-    // Verifica que o usuário em chat é considerado um bot
-    if (notBotCache.indexOf(user.username) == -1) {
-        bot.database.isBot(user.username, (e, r) => {
-            if (e)
-                return bot.logger.error(`Erro ao procurar ${user.username} nos registros de bots - ${e}`);
-            if (r)
-                return client.say(channel, `/ban ${user.username} BOT/IP GRABBER`);
-            notBotCache.push(user.username);
-        });
     }
 
     // Comandos
@@ -46,6 +38,7 @@ client.on("chat", async (channel, user, msg, self) => {
             }
         }
     
+        // Execução de comandos
         if (!msg.startsWith("$"))
             return;
 
@@ -55,7 +48,8 @@ client.on("chat", async (channel, user, msg, self) => {
         if (!cmdName)
             return;
 
-        bot.database.getCommand(channel, cmdName, (e, r) => {
+        // Procura por comandos customizado
+        db.getCommand(channel, cmdName, (e, r) => {
             if (!r) {
                 return;
             } else {
@@ -89,7 +83,7 @@ client.on("chat", async (channel, user, msg, self) => {
                     if (moderator != "false" && moderator != "true" || message == "" || commandName == "")
                         return client.say(channel, `@${user.username} tente: <nome do comando> <é para moderador (false/true)> <mensagem> Obs.: Sem "< >".`);
 
-                    bot.database.command(mode, channel, commandName, message, moderator, (r) => {
+                    db.command(mode, channel, commandName, message, moderator, (r) => {
                         return client.say(channel, `@${user.username} ` + r);
                     });
                 // UPDATE
@@ -100,7 +94,7 @@ client.on("chat", async (channel, user, msg, self) => {
                     if (commandName == "" || message == "")
                         return client.say(channel, `@${user.username} preciso do nome do comando e a nova mensagem atribuida a ele!`);
 
-                    bot.database.command(mode, channel, commandName, message, null, (r) => {
+                    db.command(mode, channel, commandName, message, null, (r) => {
                         return client.say(channel, `@${user.username} ` + r);
                     });
                 // REMOVE
@@ -110,7 +104,7 @@ client.on("chat", async (channel, user, msg, self) => {
                     if (commandName == "")
                         return client.say(channel, `@${user.username} preciso do nome de um comando!`);
 
-                    bot.database.command(mode, channel, commandName, "", null, (r) => {
+                    db.command(mode, channel, commandName, "", null, (r) => {
                         return client.say(channel, `@${user.username} ` + r);
                     });
                 // MODERATOR
@@ -124,12 +118,13 @@ client.on("chat", async (channel, user, msg, self) => {
                     if (onlyMods != "false" && onlyMods != "true")
                         return client.say(channel, `@${user.username} os argumentos precisam ser: <nome do comando> <false ou true> (sem < >).`);
 
-                    bot.database.command(mode, channel, commandName, null, onlyMods, (r) => {
+                    db.command(mode, channel, commandName, null, onlyMods, (r) => {
                         return client.say(channel, `@${user.username} ` + r);
                     });
                 }
                 break;
 
+            // Ban em todos os canais conectados
             case "globalban":
                 if (user.username != "ogalaxyy_")
                     return;
@@ -139,9 +134,10 @@ client.on("chat", async (channel, user, msg, self) => {
                 
                 // Encontra todos os canais e bane um por um
                 for (let selectedChannel of channelList) {
+                    // Delay
                     function delay(bot) {
                         setTimeout(function() {
-                            client.say("#"+selectedChannel.toLowerCase(), `/ban ${bot} BOT/IP GRABBER`);
+                            client.say("#" + selectedChannel, `/ban ${bot} BOT/IP GRABBER`);
                             console.log(`Canal: ${selectedChannel} | Global ban em: ${bot}`);
                         }, 1000 * 4 * count);
                         count += 1;
@@ -154,6 +150,30 @@ client.on("chat", async (channel, user, msg, self) => {
                     }, 10000);
                     count = 1;
                 }
+                break;
+            
+            // Banimento por uma lista já definida
+            case "banlist":
+                if (user.username != "ogalaxyy_")
+                    return;
+                
+                var banlist = fs.readFileSync("./utils/others/banlist.txt")
+                    .toString().replace(/\r\n/g, " ").trim().split(" ");
+                
+                // Delay
+                var count = 1;
+                function delay(bot) {
+                    setTimeout(function() {
+                        client.say(channel, `/ban ${bot} BOT/IP GRABBER`);
+                        console.log(`Canal: ${channel} | Local ban com a lista: ${bot}`);
+                    }, 1000 * 4 * count);
+                    count += 1;
+                }
+
+                for (var bot of banlist) {
+                    delay(bot);
+                }
+
                 break;
         }
     } catch(e) { console.log(e)};
