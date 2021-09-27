@@ -35,7 +35,6 @@ client.on("chat", async (channel, user, msg, self) => {
         for (var item of anti_spam) {
             if (msg.includes(item) && !badges.moderator && !badges.broadcaster && !self) {
                 client.timeout(channel, user["display-name"], 60 * 5, "ASCII ART");
-                console.log("Tek");
                 break;
             }
         }
