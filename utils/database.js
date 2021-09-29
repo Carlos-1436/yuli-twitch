@@ -1,7 +1,6 @@
 const sqlite3 = require("sqlite3");
 require("dotenv").config();
-const logger = require("./logs.js");
-const logs = new logger.Logs();
+const logs = require("./logs.js");
 const fs = require("fs");
 
 class dbControler {

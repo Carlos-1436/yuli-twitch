@@ -1,6 +1,5 @@
 const { Client } = require("tmi.js");
 require("dotenv").config();
-const logs = require("../logs.js");
 const db = require("../database.js");
 
 class bot {
@@ -19,7 +18,7 @@ class bot {
             }
         });
 
-        this.logger = new logs.Logs();
+        this.logger = require("../logs.js");
         this.database = new db.database("database.db");
     }
 
