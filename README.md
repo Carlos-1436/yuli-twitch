@@ -1,6 +1,5 @@
 # YULI TWITCH | Versão antiga
-
-### Esse é um projeto muito antigo que já foi descontinuado, seu código continuará o mesmo e por isso cuidado pois pode haver muitos problemas. O mesmo não passará por novas atualizações já que uma nova versão que será feita em Typescript estará para ser lançada.
+### ⚠ AVISO: Esse é um projeto muito antigo que já foi descontinuado, seu código continuará o mesmo e por isso cuidado pois pode haver muitos problemas.
 
 ## Quem é Yuli?
 
